@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { ChangeEvent, useRef, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/tauri";
 import "./App.css";
 
 function App() {
+  
+  // GREETING
   const [greetMsg, setGreetMsg] = useState("");
   const [name, setName] = useState("");
 
@@ -11,6 +13,29 @@ function App() {
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
     setGreetMsg(await invoke("greet", { name }));
   }
+
+  // FILE HANDLING
+  const [filePath, setFilePath] = useState<string | null>(null); // State to store the selected file path
+  const fileInputRef = useRef<HTMLInputElement | null>(null); // Ref for file input
+
+  // Handle file selection
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      const file = event.target.files[0];
+      if (file.name.endsWith(".xlsx")) {
+        setFilePath(file.name); // Set the file path if the file is valid (.xlsx)
+        console.log("Selected file path:", file.name);
+      } else {
+        alert("Please select a valid .xlsx file."); // Alert if the file is not .xlsx
+        setFilePath(null); // Clear file path if an invalid file is selected
+      }
+    }
+  };
+
+  // Trigger file selection dialog
+  const handleFileClick = () => {
+    fileInputRef.current?.click(); // Trigger file input dialog
+  };
 
   return (
     <div className="container">
@@ -46,7 +71,31 @@ function App() {
       </form>
 
       <p>{greetMsg}</p>
+
+      {/* File Selection Button */}
+      <div className="file-selection">
+        <button onClick={handleFileClick}>Select .xlsx File</button>
+        {/* Hidden file input */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" // Restrict to .xlsx files
+          onChange={handleFileChange}
+        />
+      </div>
+
+      {/* Display selected file path */}
+      <div>
+        {filePath ? (
+          <p>Selected file: {filePath}</p>
+        ) : (
+          <p>No file selected yet</p>
+        )}
+      </div>
+
     </div>
+
   );
 }
 
